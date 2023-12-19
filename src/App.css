@@ -1,0 +1,34 @@
+
+
+
+
+
+.post-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.post-popup-content {
+  background: #fff;
+  padding: 20px;
+  color: #333;
+  border-radius: 5px;
+  max-width: 500px;
+}
+
+.select{
+  background-color: #fff;
+  color: #000;
+  border-radius: 8px;
+  padding: 5px 10px;
+}
+
+
+
