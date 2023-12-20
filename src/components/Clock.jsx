@@ -2,54 +2,71 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const Clock = ({ selectedCountry }) => {
-  const [time, setTime] = useState(new Date());
-  const [isPaused, setIsPaused] = useState(false);
-  const [pausedTime, setPausedTime] = useState(null);
+  const [timeSec, setTimeSec] = useState(-1);
+  const [isPaused, setIsPaused] = useState(true);
+
+  function getTimeComponents(dateTimeString) {
+    if (dateTimeString === undefined) return -1;
+    console.log('dateTimeString: ', dateTimeString);
+    const timeString = dateTimeString.substring(11, 19);
+    return (
+      (parseInt(timeString.substring(0, 2)) * 3600 +
+        parseInt(timeString.substring(3, 5)) * 60 +
+        parseInt(timeString.substring(6, 8))) %
+      86400
+    );
+  }
+  const fetchTime = async () => {
+    try {
+      const response = await axios.get(
+        `http://worldtimeapi.org/api/timezone/${selectedCountry}`
+      );
+      // console.log('resp: ', response.data);
+      // console.log('new time : ', response.data.datetime);
+      setTimeSec(getTimeComponents(response.data.datetime));
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  useEffect(() => {
+    fetchTime();
+  }, [selectedCountry]);
 
   useEffect(() => {
     let interval;
-
-    const fetchTime = async () => {
-      try {
-        const response = await axios.get(`http://worldtimeapi.org/api/timezone/${selectedCountry}`);
-        setTime(new Date(response.data.utc_datetime));
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
     if (!isPaused) {
-      fetchTime();
-
       interval = setInterval(() => {
-        fetchTime();
+        setTimeSec((timeSec + 1) % 86400);
       }, 1000);
     }
 
-    return () => clearInterval(interval);
-  }, [isPaused, selectedCountry]);
+    return () => clearInterval(interval); // Clear interval on unmount
+  }, [isPaused, timeSec]);
 
   const togglePause = () => {
-    if (!isPaused) {
-      setPausedTime(new Date());
-    }
-
+   
     setIsPaused(!isPaused);
   };
 
-  useEffect(() => {
-    if (pausedTime !== null && !isPaused) {
-      // Resume from the paused time
-      const timeDifference = new Date() - pausedTime;
-      setPausedTime(null);
-      setTime(new Date(time - timeDifference));
+
+  function formatTime() {
+    if (timeSec === -1) {
+      return 'Clock Display Here';
     }
-  }, [isPaused, pausedTime]);
+    const formattedHours = Math.floor(timeSec / 3600);
+    const formattedMinutes = Math.floor((timeSec % 3600) / 60);
+    const formattedSeconds = timeSec % 60;
+    return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
+  }
 
   return (
     <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-      <p>{time.toLocaleTimeString()}</p>
-      <button className='button' style={{ backgroundColor: '#b6e7a7', color: '#000', height: '42px' }} onClick={togglePause}>
+      <p>{formatTime()}</p>
+      <button
+        className="button"
+        style={{ backgroundColor: '#b6e7a7', color: '#000', height: '42px' }}
+        onClick={togglePause}
+      >
         {isPaused ? 'Start' : 'Pause'}
       </button>
     </div>
